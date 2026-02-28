@@ -1,0 +1,10 @@
+﻿node_modules/
+__pycache__/
+*.pyc
+venv/
+*.pkl
+*.pt
+*.db
+dist/
+.env
+Git-2.53.0-64-bit.exe
