@@ -1,30 +1,20 @@
-// Dashboard.jsx — Main overview page showing history and recent predictions
-
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:8000";  // Backend URL
+const API = "http://localhost:8000";
 
-// Simple bar chart component built without any library
 function BarChart({ data }) {
   if (!data || data.length === 0) return <p style={{ color: "#64748b" }}>No data yet.</p>;
-
-  const maxFatigue = 10; // Fatigue is on a 0–10 scale
-
+  const maxFatigue = 10;
   return (
     <div>
       <div className="chart-container">
         {data.map((d, i) => {
           const heightPct = (d.fatigue_score / maxFatigue) * 100;
-          // Color based on fatigue level
           const color = d.fatigue_score < 4 ? "#4ade80" : d.fatigue_score < 7 ? "#facc15" : "#f87171";
           return (
             <div className="bar-wrapper" key={i}>
-              <div
-                className="bar"
-                style={{ height: `${heightPct}%`, background: color }}
-                title={`Fatigue: ${d.fatigue_score}`}
-              />
-              <div className="bar-label">{d.date?.slice(5)}</div>  {/* Show MM-DD */}
+              <div className="bar" style={{ height: `${heightPct}%`, background: color }} title={`Fatigue: ${d.fatigue_score}`} />
+              <div className="bar-label">{d.date?.slice(5)}</div>
             </div>
           );
         })}
@@ -38,16 +28,15 @@ function BarChart({ data }) {
   );
 }
 
-export default function Dashboard() {
+export default function Dashboard({ token }) {
   const [history, setHistory] = useState([]);
   const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Load data when the page opens
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/history`).then(r => r.json()).catch(() => ({ history: [] })),
-      fetch(`${API}/predictions`).then(r => r.json()).catch(() => ({ predictions: [] }))
+      fetch(`${API}/history`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ history: [] })),
+      fetch(`${API}/predictions`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ predictions: [] }))
     ]).then(([histData, predData]) => {
       setHistory(histData.history || []);
       setPredictions(predData.predictions || []);
@@ -62,7 +51,6 @@ export default function Dashboard() {
       <div className="page-title">📊 Dashboard</div>
       <div className="page-subtitle">Your AI Digital Twin — behavioral health overview</div>
 
-      {/* ── Key stats from last record ── */}
       {history.length > 0 && (
         <div className="stats-grid">
           <div className="stat-card">
@@ -88,13 +76,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── 7-day fatigue chart ── */}
       <div className="card">
         <h2>📈 Fatigue Score — Last 7 Days</h2>
         {loading ? <p style={{ color: "#64748b" }}>Loading...</p> : <BarChart data={history} />}
       </div>
 
-      {/* ── History table ── */}
       <div className="card">
         <h2>🗓️ Behavioral History</h2>
         {history.length === 0 ? (
@@ -102,9 +88,7 @@ export default function Dashboard() {
         ) : (
           <table className="data-table">
             <thead>
-              <tr>
-                <th>Date</th><th>Sleep (h)</th><th>Screen (h)</th><th>Steps</th><th>Fatigue</th>
-              </tr>
+              <tr><th>Date</th><th>Sleep (h)</th><th>Screen (h)</th><th>Steps</th><th>Fatigue</th></tr>
             </thead>
             <tbody>
               {[...history].reverse().map((r, i) => (

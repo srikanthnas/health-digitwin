@@ -1,4 +1,4 @@
-// App.jsx — Root component with navigation between pages
+// App.jsx — Root component with navigation and auth
 
 import { useState } from "react";
 import Dashboard from "./pages/Dashboard";
@@ -8,10 +8,54 @@ import PredictFatigue from "./pages/PredictFatigue";
 import "./App.css";
 
 export default function App() {
-  // Track which page the user is on
   const [activePage, setActivePage] = useState("dashboard");
+  const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [userName, setUserName] = useState(localStorage.getItem("userName") || "");
+  const [authMode, setAuthMode] = useState("login"); // "login" or "register"
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [authError, setAuthError] = useState("");
 
-  // Simple nav item component
+  const handleAuth = async () => {
+    setAuthError("");
+    const url = authMode === "login"
+      ? "http://localhost:8000/login"
+      : "http://localhost:8000/register";
+
+    try {
+      if (authMode === "login") {
+        const formData = new URLSearchParams();
+        formData.append("username", form.email);
+        formData.append("password", form.password);
+        const res = await fetch(url, { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail);
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("userName", data.name);
+        setToken(data.access_token);
+        setUserName(data.name);
+      } else {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail);
+        setAuthMode("login");
+        setAuthError("Registered! Please login.");
+      }
+    } catch (err) {
+      setAuthError(err.message);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userName");
+    setToken(null);
+    setUserName("");
+  };
+
   const NavItem = ({ id, label, emoji }) => (
     <button
       onClick={() => setActivePage(id)}
@@ -21,20 +65,69 @@ export default function App() {
     </button>
   );
 
-  // Render the correct page based on activePage
   const renderPage = () => {
     switch (activePage) {
-      case "dashboard":    return <Dashboard />;
-      case "generate":     return <GenerateData />;
-      case "train":        return <TrainModel />;
-      case "predict":      return <PredictFatigue />;
-      default:             return <Dashboard />;
+      case "dashboard":  return <Dashboard token={token} />;
+      case "generate":   return <GenerateData token={token} />;
+      case "train":      return <TrainModel token={token} />;
+      case "predict":    return <PredictFatigue token={token} />;
+      default:           return <Dashboard token={token} />;
     }
   };
 
+  // ── Show login/register if not authenticated ──
+  if (!token) {
+    return (
+      <div className="app" style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+        <div style={{ background: "#1e2235", padding: "2rem", borderRadius: "12px", width: "360px" }}>
+          <h2 style={{ color: "#a78bfa", textAlign: "center", marginBottom: "1.5rem" }}>
+            🧑‍⚕️ DigiTwin {authMode === "login" ? "Login" : "Register"}
+          </h2>
+
+          {authMode === "register" && (
+            <input
+              placeholder="Your name"
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+              style={inputStyle}
+            />
+          )}
+          <input
+            placeholder="Email"
+            value={form.email}
+            onChange={e => setForm({ ...form, email: e.target.value })}
+            style={inputStyle}
+          />
+          <input
+            placeholder="Password"
+            type="password"
+            value={form.password}
+            onChange={e => setForm({ ...form, password: e.target.value })}
+            style={inputStyle}
+          />
+
+          {authError && <p style={{ color: "#f87171", marginBottom: "1rem" }}>{authError}</p>}
+
+          <button onClick={handleAuth} style={btnStyle}>
+            {authMode === "login" ? "Login" : "Register"}
+          </button>
+
+          <p style={{ textAlign: "center", color: "#94a3b8", marginTop: "1rem" }}>
+            {authMode === "login" ? "No account? " : "Have an account? "}
+            <span
+              onClick={() => { setAuthMode(authMode === "login" ? "register" : "login"); setAuthError(""); }}
+              style={{ color: "#a78bfa", cursor: "pointer" }}
+            >
+              {authMode === "login" ? "Register" : "Login"}
+            </span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
-      {/* ── Top navigation bar ── */}
       <nav className="navbar">
         <div className="brand">DigiTwin🧑‍⚕️</div>
         <div className="nav-links">
@@ -42,13 +135,29 @@ export default function App() {
           <NavItem id="generate"  label="Generate Data" emoji="⚙️" />
           <NavItem id="train"     label="Train Model"   emoji="🏋️" />
           <NavItem id="predict"   label="Predict"       emoji="🔮" />
+          <span style={{ color: "#94a3b8", marginLeft: "1rem" }}>👋 {userName}</span>
+          <button onClick={handleLogout} style={{ ...btnStyle, marginLeft: "0.5rem", padding: "0.4rem 1rem", background: "#ef4444" }}>
+            Logout
+          </button>
         </div>
       </nav>
-
-      {/* ── Page content ── */}
       <main className="main-content">
         {renderPage()}
       </main>
     </div>
   );
 }
+
+const inputStyle = {
+  width: "100%", padding: "0.6rem", marginBottom: "1rem",
+  borderRadius: "8px", border: "1px solid #374151",
+  background: "#111827", color: "white", fontSize: "1rem",
+  boxSizing: "border-box"
+};
+
+const btnStyle = {
+  width: "100%", padding: "0.7rem",
+  background: "#7c3aed", color: "white",
+  border: "none", borderRadius: "8px",
+  fontSize: "1rem", cursor: "pointer"
+};
