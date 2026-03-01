@@ -24,6 +24,13 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
 
+class LogDataRequest(BaseModel):
+    date: str
+    sleep_hours: float
+    screen_time: float
+    steps: int
+    fatigue_score: float
+
 
 # ─────────────────────────────────────────────
 # ENDPOINT 1: Register
@@ -47,6 +54,9 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
 # ─────────────────────────────────────────────
 # ENDPOINT 2: Login
 # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# ENDPOINT 2: Login
+# ─────────────────────────────────────────────
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username).first()
@@ -54,6 +64,41 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_access_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer", "name": user.name}
+
+
+# ─────────────────────────────────────────────
+# ENDPOINT: Log User Data Manually
+# ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# ENDPOINT: Log User Data Manually
+# ─────────────────────────────────────────────
+@router.post("/log-data")
+def log_data(data: LogDataRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Check if entry for this date already exists
+    existing = db.query(BehaviorLog).filter(
+        BehaviorLog.user_id == current_user.id,
+        BehaviorLog.date == data.date
+    ).first()
+    if existing:
+        # Update existing record
+        existing.sleep_hours = data.sleep_hours
+        existing.screen_time = data.screen_time
+        existing.steps = data.steps
+        existing.fatigue_score = data.fatigue_score
+        db.commit()
+        return {"message": f"Data updated for {data.date}"}
+    # Create new record
+    record = BehaviorLog(
+        user_id=current_user.id,
+        date=data.date,
+        sleep_hours=data.sleep_hours,
+        screen_time=data.screen_time,
+        steps=data.steps,
+        fatigue_score=data.fatigue_score
+    )
+    db.add(record)
+    db.commit()
+    return {"message": f"Data logged for {data.date}"}
 
 
 # ─────────────────────────────────────────────
@@ -108,15 +153,103 @@ def predict(db: Session = Depends(get_db), current_user: User = Depends(get_curr
     if len(records) < 7:
         raise HTTPException(status_code=400, detail="Need at least 7 days of data.")
     try:
-        score = predict_fatigue(records)
+        fatigue_score = predict_fatigue(records)
     except FileNotFoundError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    last = records[-1]
+    prev = records[-2]
+    avg_sleep = sum(r.sleep_hours for r in records) / len(records)
+    avg_screen = sum(r.screen_time for r in records) / len(records)
+    avg_steps = sum(r.steps for r in records) / len(records)
+    avg_fatigue = sum(r.fatigue_score for r in records) / len(records)
+
+    # ── Stress Level (0-10) ──
+    stress = round(
+        (last.screen_time * 0.4) +
+        ((8 - last.sleep_hours) * 0.4) +
+        ((10000 - last.steps) / 10000 * 2) +
+        (avg_fatigue * 0.2), 1
+    )
+    stress = float(np.clip(stress, 0, 10))
+
+    # ── Sleep Quality Score (0-10) ──
+    sleep_quality = round(
+        (last.sleep_hours / 9 * 5) +
+        ((10 - last.screen_time) / 10 * 3) +
+        (last.steps / 15000 * 2), 1
+    )
+    sleep_quality = float(np.clip(sleep_quality, 0, 10))
+
+    # ── Energy Level (0-10) ──
+    energy = round(
+        (last.sleep_hours * 0.5) +
+        (last.steps / 10000 * 3) +
+        ((10 - last.screen_time) * 0.2) +
+        ((10 - avg_fatigue) * 0.3), 1
+    )
+    energy = float(np.clip(energy, 0, 10))
+
+    # ── Burnout Risk (0-10) ──
+    burnout = round(
+        (avg_fatigue * 0.4) +
+        (avg_screen * 0.3) +
+        ((8 - avg_sleep) * 0.3), 1
+    )
+    burnout = float(np.clip(burnout, 0, 10))
+
+    # ── Weekly Health Trend ──
+    first_half_fatigue = sum(r.fatigue_score for r in records[:3]) / 3
+    second_half_fatigue = sum(r.fatigue_score for r in records[4:]) / 3
+    if second_half_fatigue < first_half_fatigue - 0.5:
+        trend = "improving"
+        trend_msg = "📈 Your health is improving this week!"
+    elif second_half_fatigue > first_half_fatigue + 0.5:
+        trend = "declining"
+        trend_msg = "📉 Your health is declining this week — take rest."
+    else:
+        trend = "stable"
+        trend_msg = "➡️ Your health is stable this week."
+
+    # ── Fatigue Reason ──
+    reasons = []
+    if last.sleep_hours < 6:
+        reasons.append(f"You only slept {last.sleep_hours}h yesterday — below healthy range.")
+    elif last.sleep_hours >= 8:
+        reasons.append(f"You got a solid {last.sleep_hours}h of sleep yesterday.")
+    else:
+        reasons.append(f"Your sleep was average at {last.sleep_hours}h yesterday.")
+    if last.screen_time > 6:
+        reasons.append(f"High screen time ({last.screen_time}h) disrupts recovery.")
+    elif last.screen_time < 3:
+        reasons.append(f"Low screen time ({last.screen_time}h) is great for recovery.")
+    if last.steps < 3000:
+        reasons.append(f"Very low activity ({last.steps:,} steps) increases fatigue.")
+    elif last.steps > 10000:
+        reasons.append(f"Great activity ({last.steps:,} steps) boosts energy.")
+    if prev.fatigue_score >= 7:
+        reasons.append(f"Your body is still recovering from high fatigue ({prev.fatigue_score}/10) two days ago.")
+    if avg_fatigue > 6:
+        reasons.append(f"Your weekly average fatigue is high ({avg_fatigue:.1f}/10).")
+    elif avg_fatigue < 4:
+        reasons.append(f"Your weekly fatigue average is great ({avg_fatigue:.1f}/10)!")
+
     tomorrow = str(date.today() + timedelta(days=1))
-    pred = Prediction(user_id=current_user.id, predicted_date=tomorrow, predicted_fatigue=score)
+    pred = Prediction(user_id=current_user.id, predicted_date=tomorrow, predicted_fatigue=fatigue_score)
     db.add(pred)
     db.commit()
-    return {"predicted_date": tomorrow, "predicted_fatigue_score": score}
 
+    return {
+        "predicted_date": tomorrow,
+        "predicted_fatigue_score": fatigue_score,
+        "stress_level": stress,
+        "sleep_quality": sleep_quality,
+        "energy_level": energy,
+        "burnout_risk": burnout,
+        "weekly_trend": trend,
+        "weekly_trend_message": trend_msg,
+        "reason": " ".join(reasons)
+    }
 
 # ─────────────────────────────────────────────
 # ENDPOINT 6: Get History
@@ -135,3 +268,12 @@ def get_history(db: Session = Depends(get_db), current_user: User = Depends(get_
 def get_predictions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     preds = db.query(Prediction).filter(Prediction.user_id == current_user.id).order_by(Prediction.created_at.desc()).limit(5).all()
     return {"predictions": [{"date": p.predicted_date, "fatigue": p.predicted_fatigue} for p in preds]}
+# ─────────────────────────────────────────────
+# ENDPOINT 8: Clear History
+# ─────────────────────────────────────────────
+@router.delete("/clear-history")
+def clear_history(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db.query(BehaviorLog).filter(BehaviorLog.user_id == current_user.id).delete()
+    db.query(Prediction).filter(Prediction.user_id == current_user.id).delete()
+    db.commit()
+    return {"message": "All history cleared successfully"}

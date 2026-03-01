@@ -40,9 +40,10 @@ export default function PredictFatigue({ token }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setStatus("success");
-        setMessage("✅ Prediction complete!");
-        setPrediction(data);
+      setStatus("success");
+      setMessage("✅ Prediction complete!");
+      console.log("Prediction data:", data);
+      setPrediction(data);
       } else {
         setStatus("error");
         setMessage(`❌ ${data.detail || "Prediction failed"}`);
@@ -91,18 +92,87 @@ export default function PredictFatigue({ token }) {
           </div>
         )}
       </div>
+{prediction && (
+  <div>
+    {/* ── Main Fatigue Score ── */}
+    <div className="card" style={{ textAlign: "center" }}>
+      <h2>📅 Prediction for {prediction.predicted_date}</h2>
+      <div className="fatigue-score" style={{ color: fatigueColor(prediction.predicted_fatigue_score) }}>
+        {prediction.predicted_fatigue_score} / 10
+      </div>
+      <div style={{ padding: "1rem", borderRadius: "8px", background: "#0f172a", color: fatigueColor(prediction.predicted_fatigue_score), fontSize: "1rem", fontWeight: "600" }}>
+        {fatigueLabel(prediction.predicted_fatigue_score)}
+      </div>
+      <div style={{ marginTop: "1rem", textAlign: "left", background: "#1e2235", padding: "1rem", borderRadius: "8px", borderLeft: "4px solid #7c3aed" }}>
+        <h3 style={{ color: "#a78bfa", marginBottom: "0.5rem" }}>🧠 Why this score?</h3>
+        <p style={{ color: "#94a3b8", lineHeight: "1.8" }}>{prediction.reason}</p>
+      </div>
+    </div>
 
-      {prediction && (
-        <div className="card" style={{ textAlign: "center" }}>
-          <h2>📅 Prediction for {prediction.predicted_date}</h2>
-          <div className="fatigue-score" style={{ color: fatigueColor(prediction.predicted_fatigue_score) }}>
-            {prediction.predicted_fatigue_score} / 10
-          </div>
-          <div style={{ padding: "1rem", borderRadius: "8px", background: "#0f172a", color: fatigueColor(prediction.predicted_fatigue_score), fontSize: "1rem", fontWeight: "600" }}>
-            {fatigueLabel(prediction.predicted_fatigue_score)}
-          </div>
+    {/* ── All Predictions Grid ── */}
+    <div className="stats-grid">
+      <div className="stat-card">
+        <div className="stat-value" style={{ color: prediction.stress_level > 6 ? "#f87171" : prediction.stress_level > 3 ? "#facc15" : "#4ade80" }}>
+          {prediction.stress_level}/10
         </div>
+        <div className="stat-label">😤 Stress Level</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-value" style={{ color: prediction.sleep_quality > 6 ? "#4ade80" : prediction.sleep_quality > 3 ? "#facc15" : "#f87171" }}>
+          {prediction.sleep_quality}/10
+        </div>
+        <div className="stat-label">😴 Sleep Quality</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-value" style={{ color: prediction.energy_level > 6 ? "#4ade80" : prediction.energy_level > 3 ? "#facc15" : "#f87171" }}>
+          {prediction.energy_level}/10
+        </div>
+        <div className="stat-label">⚡ Energy Level</div>
+      </div>
+      <div className="stat-card">
+        <div className="stat-value" style={{ color: prediction.burnout_risk > 6 ? "#f87171" : prediction.burnout_risk > 3 ? "#facc15" : "#4ade80" }}>
+          {prediction.burnout_risk}/10
+        </div>
+        <div className="stat-label">🔥 Burnout Risk</div>
+      </div>
+    </div>
+
+    {/* ── Weekly Trend ── */}
+    <div className="card">
+      <h2>📊 Weekly Health Trend</h2>
+      <p style={{ fontSize: "1.2rem", color: prediction.weekly_trend === "improving" ? "#4ade80" : prediction.weekly_trend === "declining" ? "#f87171" : "#facc15" }}>
+        {prediction.weekly_trend_message}
+      </p>
+    </div>
+
+    {/* ── Recommendations ── */}
+    <div className="card">
+      <h2>💡 Recommendations</h2>
+      {prediction.predicted_fatigue_score >= 7 && (
+        <ul style={{ color: "#94a3b8", paddingLeft: "1.5rem", lineHeight: "2" }}>
+          <li>🛏️ Aim for 8+ hours of sleep tonight</li>
+          <li>📱 Reduce screen time by 2+ hours</li>
+          <li>🚶 Take a 20-minute walk to boost energy</li>
+          <li>💧 Stay hydrated throughout the day</li>
+        </ul>
+      )}
+      {prediction.predicted_fatigue_score >= 4 && prediction.predicted_fatigue_score < 7 && (
+        <ul style={{ color: "#94a3b8", paddingLeft: "1.5rem", lineHeight: "2" }}>
+          <li>😴 Try to sleep 30 minutes earlier</li>
+          <li>🧘 Take short breaks from screens</li>
+          <li>🚴 Light exercise recommended</li>
+        </ul>
+      )}
+      {prediction.predicted_fatigue_score < 4 && (
+        <ul style={{ color: "#94a3b8", paddingLeft: "1.5rem", lineHeight: "2" }}>
+          <li>✅ Your habits look great — keep it up!</li>
+          <li>🏃 Good day for a longer workout</li>
+          <li>🌟 Take on challenging tasks while energy is high</li>
+        </ul>
       )}
     </div>
-  );
+  </div>
+)}
+  </div>
+);
 }

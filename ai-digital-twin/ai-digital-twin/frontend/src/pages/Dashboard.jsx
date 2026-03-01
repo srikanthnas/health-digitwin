@@ -32,7 +32,7 @@ export default function Dashboard({ token }) {
   const [history, setHistory] = useState([]);
   const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [showConfirm, setShowConfirm] = useState(false);
   useEffect(() => {
     Promise.all([
       fetch(`${API}/history`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => ({ history: [] })),
@@ -46,10 +46,58 @@ export default function Dashboard({ token }) {
 
   const latest = predictions[0];
 
-  return (
-    <div>
-      <div className="page-title">📊 Dashboard</div>
-      <div className="page-subtitle">Your AI Digital Twin — behavioral health overview</div>
+  const handleClear = async () => {
+  try {
+    await fetch(`${API}/clear-history`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setHistory([]);
+    setPredictions([]);
+    setShowConfirm(false);
+  } catch (err) {
+    setShowConfirm(false);
+  }
+};
+
+return (
+  <div>
+    {showConfirm && (
+      <div style={{
+        position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+        background: "rgba(0,0,0,0.7)", display: "flex", justifyContent: "center",
+        alignItems: "center", zIndex: 1000
+      }}>
+        <div style={{ background: "#1e2235", padding: "2rem", borderRadius: "12px", textAlign: "center", width: "320px" }}>
+          <h2 style={{ color: "#f87171", marginBottom: "1rem" }}>⚠️ Are you sure?</h2>
+          <p style={{ color: "#94a3b8", marginBottom: "1.5rem" }}>This will permanently delete all your health data and predictions!</p>
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+            <button
+              onClick={handleClear}
+              style={{ background: "#ef4444", color: "white", border: "none", borderRadius: "8px", padding: "0.6rem 1.5rem", cursor: "pointer", fontSize: "1rem" }}
+            >
+              Yes, delete
+            </button>
+            <button
+              onClick={() => setShowConfirm(false)}
+              style={{ background: "#374151", color: "white", border: "none", borderRadius: "8px", padding: "0.6rem 1.5rem", cursor: "pointer", fontSize: "1rem" }}
+            >
+              No, cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+  <div className="page-title">📊 Dashboard</div>
+  <button
+    onClick={() => setShowConfirm(true)}
+    style={{ background: "#ef4444", color: "white", border: "none", borderRadius: "8px", padding: "0.5rem 1rem", cursor: "pointer", fontSize: "0.9rem" }}
+  >
+    🗑️ Clear History
+  </button>
+</div>
+<div className="page-subtitle">Your AI Digital Twin — behavioral health overview</div>
 
       {history.length > 0 && (
         <div className="stats-grid">
