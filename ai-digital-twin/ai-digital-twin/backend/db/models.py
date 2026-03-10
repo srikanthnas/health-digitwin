@@ -35,4 +35,4 @@ class Prediction(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     predicted_date = Column(String, nullable=False)
     predicted_fatigue = Column(Float, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())& "C:\Program Files\Git\cmd\git.exe" config --global core.autocrlf true
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

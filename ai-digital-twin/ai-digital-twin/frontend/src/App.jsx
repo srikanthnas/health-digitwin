@@ -1,10 +1,11 @@
-// App.jsx — Root component with navigation and auth
+﻿// App.jsx — Root component with navigation and auth
 
 import { useState } from "react";
 import Dashboard from "./pages/Dashboard";
 import GenerateData from "./pages/GenerateData";
 import TrainModel from "./pages/TrainModel";
 import PredictFatigue from "./pages/PredictFatigue";
+import AIDoctor from "./pages/AIDoctor";
 import "./App.css";
 
 export default function App() {
@@ -56,12 +57,12 @@ export default function App() {
     setUserName("");
   };
 
-  const NavItem = ({ id, label, emoji }) => (
+  const NavItem = ({ id, label }) => (
     <button
       onClick={() => setActivePage(id)}
       className={`nav-btn ${activePage === id ? "active" : ""}`}
     >
-      {emoji} {label}
+      {label}
     </button>
   );
 
@@ -71,6 +72,7 @@ export default function App() {
       case "generate":   return <GenerateData token={token} />;
       case "train":      return <TrainModel token={token} />;
       case "predict":    return <PredictFatigue token={token} />;
+      case "doctor":     return <AIDoctor token={token} />;
       default:           return <Dashboard token={token} />;
     }
   };
@@ -131,10 +133,11 @@ export default function App() {
       <nav className="navbar">
         <div className="brand">DigiTwin🧑‍⚕️</div>
         <div className="nav-links">
-          <NavItem id="dashboard" label="Dashboard"     emoji="📊" />
-          <NavItem id="generate"  label="Generate Data" emoji="⚙️" />
-          <NavItem id="train"     label="Train Model"   emoji="🏋️" />
-          <NavItem id="predict"   label="Predict"       emoji="🔮" />
+          <NavItem id="dashboard" label="Dashboard" />
+          <NavItem id="generate"  label="Generate Data" />
+          <NavItem id="train"     label="Train Model" />
+          <NavItem id="predict"   label="Predict" />
+        <NavItem id="doctor"    label="AI Doctor" />
           <span style={{ color: "#94a3b8", marginLeft: "1rem" }}>👋 {userName}</span>
           <button onClick={handleLogout} style={{ ...btnStyle, marginLeft: "0.5rem", padding: "0.4rem 1rem", background: "#ef4444" }}>
             Logout

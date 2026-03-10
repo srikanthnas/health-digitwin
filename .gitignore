@@ -5,6 +5,7 @@ venv/
 *.pkl
 *.pt
 *.db
+*.env
 dist/
 .env
 Git-2.53.0-64-bit.exe

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from db.database import engine, Base
 from api.routes import router
 
+
 # Create all database tables on startup (if they don't exist yet)
 Base.metadata.create_all(bind=engine)
 

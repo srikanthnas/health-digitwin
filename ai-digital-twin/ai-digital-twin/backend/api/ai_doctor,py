@@ -1,0 +1,17 @@
+import os
+from anthropic import Anthropic
+from dotenv import load_dotenv
+
+load_dotenv()
+
+client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+def ask_ai_doctor(question: str, user_health_context: dict) -> str:
+    context = f"You are an AI Health Assistant in DigiTwin app. User health data: Sleep={user_health_context.get('avg_sleep')}h, Screen={user_health_context.get('avg_screen')}h, Steps={user_health_context.get('avg_steps')}, Fatigue={user_health_context.get('avg_fatigue')}/10, Trend={user_health_context.get('trend')}. Be empathetic and helpful. For serious symptoms suggest seeing a real doctor. Always end with: ⚠️ I am an AI assistant, not a real doctor. Please consult a medical professional for serious health concerns."
+    message = client.messages.create(
+        model="claude-opus-4-6",
+        max_tokens=1024,
+        system=context,
+        messages=[{"role": "user", "content": question}]
+    )
+    return message.content[0].text
