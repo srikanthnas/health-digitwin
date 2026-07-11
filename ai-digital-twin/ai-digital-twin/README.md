@@ -1,327 +1,141 @@
-# 🧠 AI Digital Twin — Personal Health Behavior Forecaster (Phase 1 MVP)
+# 🧑‍⚕️ Health DigiTwin — AI-Powered Personal Health Forecaster
 
-> Predict next-day fatigue using sleep, screen time, and steps — powered by an LSTM neural network.
+A full-stack AI health tracking application that learns your behavioral patterns and predicts your future health metrics using deep learning.
 
----
+## 🚀 Features
 
-## 1. 🏗️ Architecture Overview
+### 📊 Health Tracking
+- **Manual Data Logging** — Log daily sleep, screen time, steps, and fatigue score
+- **Natural Language Logging** — Type naturally ("slept 7 hours, walked 8000 steps") and AI extracts the data automatically
+- **Behavioral History** — View and manage your health history
 
-```
-User Browser (React)
-      ↕ HTTP requests (fetch)
-FastAPI Backend (Python)
-      ↕ SQLAlchemy ORM
-SQLite Database (digital_twin.db)
-      ↕ numpy arrays
-PyTorch LSTM Model (saved_model.pt)
-```
+### 🔮 AI Predictions
+- **Fatigue Prediction** — LSTM neural network predicts tomorrow's fatigue score
+- **Stress Level** — Predicts stress based on your behavioral patterns
+- **Sleep Quality Score** — Forecasts how well you'll sleep
+- **Energy Level** — Predicts your energy for the next day
+- **Burnout Risk** — Detects early signs of burnout
+- **Weekly Health Trend** — Shows if your health is improving or declining
 
-**Data Flow:**
-1. Frontend calls `/generate-data` → Backend creates 60 days of synthetic logs → Saved to SQLite
-2. Frontend calls `/train-model` → Backend reads all logs → Normalizes → Trains LSTM → Saves model weights
-3. Frontend calls `/predict` → Backend loads last 7 days from DB + loads saved model → Returns fatigue score
-4. Frontend calls `/history` → Backend reads last 7 records → Displayed as bar chart
+### 🩺 AI Doctor
+- Chat with an AI health assistant powered by Groq (LLaMA 3.3)
+- Get personalized advice based on your actual health data
+- Ask anything from headaches to lifestyle questions
+- Maintains conversation context across messages
 
----
+### 🔐 User Authentication
+- Secure JWT-based login and registration
+- Per-user data isolation
+- Password hashing with bcrypt
 
-## 2. 📁 Folder Structure
+### 📈 Dashboard
+- Visual bar chart of fatigue scores
+- Stats overview (sleep, screen time, steps, predicted fatigue)
+- Behavioral history table
+- Clear history with confirmation
 
-```
-ai-digital-twin/
-│
+## 🛠️ Tech Stack
+
+### Backend
+- **Python 3.14** + **FastAPI** — REST API
+- **PyTorch** — LSTM neural network for fatigue prediction
+- **SQLAlchemy** + **SQLite** — Database
+- **JWT** + **bcrypt** — Authentication
+- **Groq API** (LLaMA 3.3 70B) — AI Doctor & Natural Language Processing
+
+### Frontend
+- **React** + **Vite** — UI framework
+- **Custom CSS** — Dark theme UI
+
+## 🧠 How the AI Works
+
+### LSTM Fatigue Prediction
+The app uses a Long Short-Term Memory (LSTM) neural network that:
+1. Takes 7 days of behavioral data as input (sleep, screen time, steps, fatigue)
+2. Learns your personal patterns over time
+3. Predicts next-day fatigue with personalized accuracy
+
+Unlike simple formulas, LSTM has **memory** — it knows that one bad day affects the next 2-3 days.
+
+### AI Doctor
+Powered by Groq's LLaMA 3.3 70B model, the AI Doctor:
+- Has access to your recent health data
+- Gives personalized health advice
+- Maintains conversation context
+- Always recommends consulting a real doctor for serious issues
+
+## 📁 Project Structure
+
+health-digitwin/
 ├── backend/
-│   ├── main.py                  ← FastAPI app entry point
-│   ├── requirements.txt         ← Python dependencies
-│   │
+│   ├── main.py              # FastAPI app
+│   ├── auth.py              # JWT authentication
 │   ├── api/
-│   │   ├── __init__.py
-│   │   └── routes.py            ← All API endpoints (/generate-data, /train, /predict, etc.)
-│   │
+│   │   └── routes.py        # All API endpoints
 │   ├── db/
-│   │   ├── __init__.py
-│   │   ├── database.py          ← SQLite connection + session setup
-│   │   └── models.py            ← SQLAlchemy table definitions (BehaviorLog, Prediction)
-│   │
+│   │   ├── database.py      # SQLAlchemy setup
+│   │   └── models.py        # User, BehaviorLog, Prediction tables
 │   └── ml/
-│       ├── __init__.py
-│       ├── lstm_model.py        ← PyTorch LSTM architecture
-│       ├── trainer.py           ← Training loop + prediction logic
-│       ├── saved_model.pt       ← Created after training (auto-generated)
-│       └── scaler.pkl           ← MinMaxScaler saved after training (auto-generated)
-│
-├── frontend/
-│   ├── index.html               ← Vite HTML entry point
-│   ├── package.json             ← Node dependencies
-│   ├── vite.config.js           ← Vite dev server config
-│   │
-│   └── src/
-│       ├── main.jsx             ← React root mount
-│       ├── App.jsx              ← Navigation + page router
-│       ├── App.css              ← All styles (dark theme)
-│       │
-│       └── pages/
-│           ├── Dashboard.jsx    ← Overview: stats + 7-day chart + history table
-│           ├── GenerateData.jsx ← Controls for synthetic data generation
-│           ├── TrainModel.jsx   ← Training trigger + results display
-│           └── PredictFatigue.jsx ← Prediction result + recommendations
-│
-└── README.md
-```
+│       ├── lstm_model.py    # LSTM architecture
+│       └── trainer.py       # Training & prediction logic
+└── frontend/
+└── src/
+├── App.jsx          # Root component + auth
+├── App.css          # Global styles
+└── pages/
+├── Dashboard.jsx
+├── GenerateData.jsx
+├── TrainModel.jsx
+├── PredictFatigue.jsx
+└── AIDoctor.jsx
 
----
-
-## 3. 🗃️ Database Schema
-
-### Table: `behavior_logs`
-| Column        | Type    | Description                      |
-|--------------|---------|----------------------------------|
-| id           | INTEGER | Primary key (auto)               |
-| user_id      | TEXT    | User identifier                  |
-| date         | TEXT    | Date (YYYY-MM-DD)                |
-| sleep_hours  | FLOAT   | Hours of sleep                   |
-| screen_time  | FLOAT   | Hours of screen use              |
-| steps        | INTEGER | Daily step count                 |
-| fatigue_score| FLOAT   | Actual fatigue 0–10              |
-| created_at   | DATETIME| Auto timestamp                   |
-
-### Table: `predictions`
-| Column            | Type    | Description                  |
-|------------------|---------|------------------------------|
-| id               | INTEGER | Primary key (auto)           |
-| user_id          | TEXT    | User identifier              |
-| predicted_date   | TEXT    | Date being predicted         |
-| predicted_fatigue| FLOAT   | Predicted fatigue 0–10       |
-| created_at       | DATETIME| Auto timestamp               |
-
----
-
-## 4. 🔌 API Endpoints
-
-| Method | Endpoint        | Description                                |
-|--------|-----------------|--------------------------------------------|
-| GET    | `/`             | Health check                               |
-| POST   | `/generate-data`| Generate N days of synthetic data          |
-| POST   | `/train-model`  | Train LSTM on stored data                  |
-| POST   | `/predict`      | Predict next-day fatigue                   |
-| GET    | `/history`      | Get last 7 days of behavioral data         |
-| GET    | `/predictions`  | Get 5 most recent predictions              |
-
-Auto-generated API docs: **http://localhost:8000/docs**
-
----
-
-## 5. ⚙️ Setup Instructions (Step by Step)
+## ⚙️ Setup & Installation
 
 ### Prerequisites
-- Python 3.10 or 3.11 ([download](https://python.org))
-- Node.js 18+ ([download](https://nodejs.org))
-- A terminal (Mac: Terminal, Windows: PowerShell or Git Bash)
+- Python 3.10+
+- Node.js 18+
+- Groq API key (free at console.groq.com)
 
----
-
-### Step 1: Clone / Download the project
-
-If you have git:
+### Backend Setup
 ```bash
-git clone <your-repo-url>
-cd ai-digital-twin
+cd backend
+pip install fastapi uvicorn sqlalchemy pydantic passlib python-jose torch numpy groq python-dotenv
 ```
 
-Or just download and unzip the folder.
+Create a `.env` file in the backend folder:
 
----
-
-### Step 2: Set up the Python Backend
-
-Open a terminal window and navigate to the backend folder:
-
+Start the backend:
 ```bash
-cd ai-digital-twin/backend
+python -m uvicorn main:app --reload
 ```
 
-Create a virtual environment (keeps your Python packages organized):
+### Frontend Setup
 ```bash
-# Mac/Linux:
-python3 -m venv venv
-source venv/bin/activate
-
-# Windows:
-python -m venv venv
-venv\Scripts\activate
-```
-
-Install required packages:
-```bash
-pip install -r requirements.txt
-```
-
-> ⏳ PyTorch is large (~800MB). This may take a few minutes.
-
-Start the backend server:
-```bash
-uvicorn main:app --reload
-```
-
-You should see:
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
-
-✅ Backend is running! Keep this terminal open.
-
----
-
-### Step 3: Set up the React Frontend
-
-Open a **second terminal window**:
-
-```bash
-cd ai-digital-twin/frontend
+cd frontend
 npm install
 npm run dev
 ```
 
-You should see:
-```
-  VITE v5.x  ready in 300ms
-  ➜  Local:   http://localhost:3000/
-```
+### Access the App
+Open `http://localhost:5173` in your browser.
 
-✅ Frontend is running! Visit **http://localhost:3000** in your browser.
+## 📱 How to Use
 
----
+1. **Register** — Create an account
+2. **Log Data** — Enter your daily sleep, screen time, steps and fatigue
+3. **Train Model** — Train the LSTM on your data (needs 7+ days)
+4. **Predict** — Get tomorrow's fatigue + stress + energy predictions
+5. **AI Doctor** — Chat with the AI about any health questions
 
-## 6. 🎮 How to Use the App
+## 🔮 Upcoming Features
+- 7-Day Forecast
+- What-If Simulator
+- Heatmap Calendar
+- Streak System
+- Personal Health Score
 
-Follow these steps in order:
+## ⚠️ Disclaimer
+This app is for educational and personal tracking purposes only. The AI Doctor provides general health information and is not a substitute for professional medical advice. Always consult a qualified healthcare provider for medical decisions.
 
-### Step 1: Generate Data
-1. Click **"⚙️ Generate Data"** in the top nav
-2. Slide the slider to choose how many days (60 is good)
-3. Click **"Generate Data"**
-4. You should see a success message
-
-### Step 2: Train the Model
-1. Click **"🏋️ Train Model"**
-2. Click **"Train LSTM Model"**
-3. Wait 10–30 seconds for training to complete
-4. You'll see the loss chart showing the AI learning
-
-### Step 3: Predict Fatigue
-1. Click **"🔮 Predict"**
-2. Review the last 7 days table
-3. Click **"Predict Tomorrow's Fatigue"**
-4. See the score (0–10) + personalized recommendations
-
-### Step 4: View Dashboard
-1. Click **"📊 Dashboard"** to see the full history chart and data table
-
----
-
-## 7. 🚀 Future Upgrade Roadmap
-
-### What is a "Digital Twin" exactly?
-
-A **Digital Twin** is a real-time AI model of you — not a generic model, but *your specific model*. Instead of using population averages, it learns YOUR personal patterns:
-- Your body's unique sleep response
-- Your specific screen fatigue curve
-- Your personal activity baseline
-
-As more of YOUR data comes in, it improves its predictions of YOU specifically.
-
----
-
-### Phase 2: More Input Signals
-
-| Signal           | How to Add                                      | Why It Helps                        |
-|------------------|-------------------------------------------------|--------------------------------------|
-| **Typing rhythm** | Browser extension tracking WPM + error rate     | Cognitive fatigue indicator          |
-| **Voice energy**  | Microphone amplitude analysis during calls      | Emotional + physical energy state    |
-| **HRV / Heart rate**| Wearable API (Fitbit, Apple Watch, Oura)     | Most direct physiological signal     |
-| **Mood journal**  | Daily 1-click mood rating in UI                 | Connects emotion to behavior         |
-
----
-
-### Phase 3: Real User Data
-
-Replace `/generate-data` with:
-- A **manual data entry form** (enter yesterday's sleep/steps)
-- **Wearable sync** (Fitbit/Garmin/Apple Health API integration)
-- **Continuous logging** (background passive tracking via app)
-
----
-
-### Phase 4: Reinforcement Learning
-
-Instead of just predicting fatigue, the AI becomes an **active coach**:
-
-```
-Current Behavior → Predict Fatigue → Suggest Action → User Follows/Ignores 
-                         ↑                                      ↓
-              Update model based on outcome ←─────────────── Track result
-```
-
-The model learns which suggestions actually work for *you*.
-Library: **Stable Baselines3** (wraps PyTorch RL algorithms)
-
----
-
-### Phase 5: Personalized Medicine (Future)
-
-- Integrate with lab results (blood work) via HL7 FHIR API
-- Track medication timing vs. energy patterns
-- Add clinician-facing dashboard (doctor sees twin summary)
-- Federated learning so data never leaves your device
-
----
-
-### Phase 6: Multi-User + Mobile
-
-- Add JWT authentication (user accounts)
-- React Native mobile app
-- Push notifications: "You're predicted to have high fatigue tomorrow"
-- Weekly twin report (PDF/email)
-
----
-
-## 8. 📐 Architecture Upgrade Path
-
-```
-MVP (Now):
-  React → FastAPI → SQLite → PyTorch LSTM
-
-Production:
-  React Native App
-      ↓
-  API Gateway (rate limiting, auth)
-      ↓
-  FastAPI (multiple workers, Docker)
-      ↓
-  PostgreSQL (persistent, scalable)
-      ↓
-  PyTorch serving (TorchServe or ONNX Runtime)
-      ↓
-  MLflow (experiment tracking, model versioning)
-      ↓
-  Redis (caching predictions)
-```
-
----
-
-## 9. ❓ Troubleshooting
-
-**"CORS error" in browser:**
-→ Make sure the backend is running on port 8000
-
-**"Not enough data to train":**
-→ Run Generate Data first
-
-**"Model not trained yet":**
-→ Run Train Model first
-
-**PyTorch install fails:**
-→ Try: `pip install torch --index-url https://download.pytorch.org/whl/cpu`
-
----
-
-*Built with ❤️ — FastAPI + PyTorch + React*
+## 👨‍💻 Developer
+Built by Srikanth — AI Digital Twin Health Forecaster
