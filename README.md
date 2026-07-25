@@ -1,170 +1,289 @@
-Here's the refined version:
-
----
-
 # 🧑‍⚕️ Health DigiTwin — AI-Powered Personal Health Forecaster
 
-A full-stack AI health tracking application that learns your behavioral patterns and predicts future health metrics using deep learning.
+An AI-powered full-stack health monitoring application that learns a user's behavioral patterns and predicts future health metrics using deep learning.
 
-> **Live Project:** [github.com/srikanthnas/health-digitwin](https://github.com/srikanthnas/health-digitwin)
+🔗 **Live Demo:** https://health-digitwin-bm7p.vercel.app  
+🔗 **Backend API:** https://health-digitwin-1.onrender.com/docs  
+🔗 **Repository:** https://github.com/srikanthnas/health-digitwin
 
 ---
 
-## 🚀 Features
+# 🚀 Overview
 
-### 📊 Health Tracking
-- **Manual Data Logging** — Log daily sleep, screen time, steps, and fatigue score
-- **Natural Language Logging** — Type naturally ("slept 7 hours, walked 8000 steps") and AI extracts the data automatically
-- **Behavioral History** — View and manage your last 7 days of health data
+Health DigiTwin helps users track their daily health habits, analyze behavioral trends, and predict future fatigue levels using an LSTM neural network.
 
-### 🔮 AI Predictions
-- **Fatigue Prediction** — LSTM neural network predicts tomorrow's fatigue score
-- **Stress Level** — Predicts stress based on your behavioral patterns
-- **Sleep Quality Score** — Forecasts how well you'll sleep
-- **Energy Level** — Predicts your energy for the next day
-- **Burnout Risk** — Detects early signs of burnout
-- **Weekly Health Trend** — Shows if your health is improving or declining
+The application combines modern web technologies, deep learning, and conversational AI to provide personalized health insights through an intuitive dashboard.
 
-### 🩺 AI Doctor
-- Chat with an AI health assistant powered by **Groq (LLaMA 3.3 70B)**
-- Gets personalized advice based on your actual health data
-- Maintains conversation context across messages
-- Always recommends consulting a real doctor for serious issues
+---
 
-### 🔐 User Authentication
-- Secure JWT-based login and registration
-- Per-user data isolation
-- Password hashing with bcrypt
+# ✨ Features
 
-### 📈 Dashboard
-- Visual bar chart of fatigue scores over time
-- Stats overview — sleep, screen time, steps, predicted fatigue
+## 📊 Health Tracking
+
+- Manual daily health logging
+  - Sleep duration
+  - Screen time
+  - Step count
+  - Fatigue score
+
+- Natural Language Health Logging
+  - Example:
+    ```
+    Slept 7 hours, walked 8000 steps, used phone for 5 hours.
+    ```
+  - AI automatically extracts and stores the data.
+
+- Behavioral History
+  - View the last seven days of health records
+  - Edit or clear history whenever needed
+
+---
+
+## 🔮 AI Predictions
+
+Using historical behavioral data, the application predicts:
+
+- Tomorrow's fatigue score
+- Stress level
+- Sleep quality
+- Energy level
+- Burnout risk
+- Weekly health trend
+
+Predictions become personalized after training on user-specific data.
+
+---
+
+## 🩺 AI Doctor
+
+Powered by **Groq's LLaMA 3.3 70B**
+
+Features include:
+
+- Personalized health advice
+- Context-aware conversations
+- Uses actual user health history
+- Maintains chat history
+- Encourages consultation with healthcare professionals when appropriate
+
+---
+
+## 🔐 Authentication
+
+- JWT Authentication
+- Secure password hashing with bcrypt
+- User-specific health records
+- Protected API endpoints
+
+---
+
+## 📈 Interactive Dashboard
+
+- Fatigue trend visualization
+- Weekly health statistics
 - Behavioral history table
-- Clear history with confirmation dialog
+- Prediction summary cards
+- One-click history reset
 
 ---
 
-## 🛠️ Tech Stack
+# 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Backend | Python 3.14, FastAPI, SQLAlchemy, SQLite |
-| ML Model | PyTorch (LSTM Neural Network) |
-| Auth | JWT, bcrypt, passlib |
-| AI Doctor | Groq API — LLaMA 3.3 70B |
-| Frontend | React 18, Vite, Custom CSS |
-
----
-
-## 🧠 How the AI Works
-
-### LSTM Fatigue Prediction
-The app uses a **Long Short-Term Memory (LSTM)** neural network that:
-1. Takes 7 days of behavioral data as input (sleep, screen time, steps, fatigue)
-2. Learns your personal patterns over time
-3. Predicts next-day fatigue with personalized accuracy
-
-Unlike simple rule-based formulas, LSTM has **memory** — it understands that one bad day can affect the next 2–3 days.
-
-### AI Doctor
-Powered by **Groq's LLaMA 3.3 70B**, the AI Doctor:
-- Has access to your recent health metrics
-- Gives context-aware, personalized advice
-- Maintains full conversation history
-- Always recommends professional medical consultation for serious concerns
+| Category | Technology |
+|----------|------------|
+| Frontend | React 18, Vite, JavaScript, CSS |
+| Backend | FastAPI, Python, SQLAlchemy |
+| Database | SQLite |
+| Authentication | JWT, Passlib, bcrypt |
+| Machine Learning | PyTorch (LSTM Neural Network) |
+| AI Assistant | Groq API (LLaMA 3.3 70B) |
+| Deployment | Vercel, Render |
 
 ---
 
-## 📁 Project Structure
+# 🧠 Machine Learning Pipeline
 
-```
+## LSTM Fatigue Prediction
+
+The model learns behavioral patterns using:
+
+- Sleep duration
+- Screen time
+- Daily step count
+- Historical fatigue scores
+
+### Workflow
+
+1. Collect the previous seven days of behavioral data
+2. Train an LSTM neural network
+3. Learn temporal health patterns
+4. Predict tomorrow's fatigue score
+5. Generate additional wellness metrics
+
+Unlike rule-based systems, the LSTM understands temporal dependencies, allowing previous behaviors to influence future predictions.
+
+---
+
+# 🤖 AI Doctor
+
+The AI Doctor is powered by **Groq's LLaMA 3.3 70B**.
+
+It receives summarized health information including:
+
+- Average sleep
+- Average screen time
+- Step count
+- Fatigue trend
+- Weekly health pattern
+
+This enables personalized responses instead of generic health advice.
+
+---
+
+# 📁 Project Structure
+
+```text
 health-digitwin/
+│
 ├── backend/
-│   ├── main.py              # FastAPI app entry point
-│   ├── auth.py              # JWT authentication
-│   ├── .env                 # API keys (not committed)
 │   ├── api/
-│   │   └── routes.py        # All API endpoints
+│   │   └── routes.py
+│   │
 │   ├── db/
-│   │   ├── database.py      # SQLAlchemy setup
-│   │   └── models.py        # User, BehaviorLog, Prediction models
-│   └── ml/
-│       ├── lstm_model.py    # LSTM architecture
-│       └── trainer.py       # Training & prediction logic
+│   │   ├── database.py
+│   │   └── models.py
+│   │
+│   ├── ml/
+│   │   ├── lstm_model.py
+│   │   └── trainer.py
+│   │
+│   ├── auth.py
+│   ├── main.py
+│   └── .env
+│
 └── frontend/
     └── src/
-        ├── App.jsx          # Root component + auth
-        ├── App.css          # Global dark theme styles
-        └── pages/
-            ├── Dashboard.jsx
-            ├── GenerateData.jsx
-            ├── TrainModel.jsx
-            ├── PredictFatigue.jsx
-            └── AIDoctor.jsx
+        ├── pages/
+        │   ├── Dashboard.jsx
+        │   ├── GenerateData.jsx
+        │   ├── TrainModel.jsx
+        │   ├── PredictFatigue.jsx
+        │   └── AIDoctor.jsx
+        │
+        ├── App.jsx
+        └── App.css
 ```
 
 ---
 
-## ⚙️ Setup & Installation
+# ⚙️ Installation
 
-### Prerequisites
+## Prerequisites
+
 - Python 3.10+
 - Node.js 18+
-- Groq API key — free at [console.groq.com](https://console.groq.com)
+- Groq API Key
 
-### Backend Setup
+---
+
+## Backend
+
 ```bash
 cd backend
+
 pip install fastapi uvicorn sqlalchemy pydantic passlib python-jose torch numpy groq python-dotenv bcrypt==4.0.1
 ```
 
-Create a `.env` file in the `backend/` folder:
-```
-GROQ_API_KEY=your_groq_api_key_here
-SECRET_KEY=your_secret_key_here
+Create a `.env` file:
+
+```env
+GROQ_API_KEY=your_api_key
+SECRET_KEY=your_secret_key
 ```
 
-Start the backend:
+Run:
+
 ```bash
 python -m uvicorn main:app --reload
 ```
 
-### Frontend Setup
+---
+
+## Frontend
+
 ```bash
 cd frontend
+
 npm install
+
 npm run dev
 ```
 
-Open **http://localhost:5173** in your browser.
+Visit:
+
+```
+http://localhost:5173
+```
 
 ---
 
-## 📱 How to Use
+# 📖 Usage
 
-1. **Register** — Create an account
-2. **Log Data** — Enter your daily sleep, screen time, steps and fatigue score
-3. **Generate Data** — Or generate 60 days of synthetic data instantly
-4. **Train Model** — Train the LSTM on your data (needs 7+ days)
-5. **Predict** — Get tomorrow's fatigue, stress, energy and burnout predictions
-6. **AI Doctor** — Chat with the AI about any health questions
-
----
-
-## 🔮 Upcoming Features
-- 7-Day Forecast
-- What-If Simulator ("What if I sleep 8 hours tonight?")
-- Heatmap Calendar
-- Streak & Habit Tracking System
-- Personal Health Score
+1. Register a new account
+2. Log your daily health data
+3. (Optional) Generate synthetic data
+4. Train the LSTM model
+5. Predict tomorrow's fatigue
+6. View dashboard analytics
+7. Chat with the AI Doctor
 
 ---
 
-## ⚠️ Disclaimer
-This app is for educational and personal tracking purposes only. The AI Doctor provides general health information and is **not a substitute for professional medical advice**. Always consult a qualified healthcare provider for medical decisions.
+# 📌 Future Enhancements
+
+- Seven-day health forecasting
+- What-if health simulator
+- Calendar heatmap
+- Habit streak tracking
+- Overall wellness score
+- Export reports as PDF
+- Wearable device integration
 
 ---
 
-## 👨‍💻 Developer
-Built by **Srikanth** | Department of Information Science & Engineering, Global Academy of Technology, Bengaluru
+# 📷 Screenshots
 
+> Add screenshots of:
+
+- Login
+- Dashboard
+- Data Logging
+- Fatigue Prediction
+- AI Doctor
+- Charts
+
+---
+
+# ⚠️ Disclaimer
+
+Health DigiTwin is intended for educational and personal wellness tracking purposes only.
+
+The AI Doctor does **not** replace professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare professional for medical concerns.
+
+---
+
+# 👨‍💻 Developer
+
+**Srikanth N A S**
+
+Information Science & Engineering  
+Global Academy of Technology, Bengaluru
+
+### Connect
+
+- GitHub: https://github.com/srikanthnas
+- LinkedIn: *(Add your LinkedIn profile URL here)*
+
+---
+
+⭐ If you found this project useful, consider giving it a star on GitHub.
