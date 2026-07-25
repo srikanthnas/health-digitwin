@@ -17,10 +17,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Allow the React frontend (running on port 3000) to talk to this backend
+# Allowed frontend origins
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://health-digitwin-bm7p.vercel.app",
+]
+
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"], # Frontend URL
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
