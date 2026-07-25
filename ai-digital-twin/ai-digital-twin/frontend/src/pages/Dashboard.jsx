@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:8000";
+const API = "https://health-digitwin-1.onrender.com";
 
 function BarChart({ data }) {
   if (!data || data.length === 0) return <p style={{ color: "#64748b" }}>No data yet.</p>;

@@ -1,6 +1,8 @@
 import { useState } from "react";
 
-const API = "http://localhost:8000";
+
+
+const API = "https://health-digitwin-1.onrender.com";
 
 export default function TrainModel({ token }) {
   const [status, setStatus] = useState(null);

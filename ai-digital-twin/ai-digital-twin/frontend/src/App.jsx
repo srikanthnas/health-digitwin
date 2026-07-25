@@ -18,9 +18,11 @@ export default function App() {
 
   const handleAuth = async () => {
     setAuthError("");
+    const API_URL = "https://health-digitwin-1.onrender.com";
+
     const url = authMode === "login"
-      ? "http://localhost:8000/login"
-      : "http://localhost:8000/register";
+      ? `${API_URL}/login`
+      : `${API_URL}/register`;
 
     try {
       if (authMode === "login") {
