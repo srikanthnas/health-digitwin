@@ -1,4 +1,6 @@
 # routes.py — All API endpoints for the Digital Twin backend
+from dotenv import load_dotenv
+load_dotenv()
 import os
 from groq import Groq
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,6 +10,7 @@ from datetime import date, timedelta
 from pydantic import BaseModel
 import random
 import numpy as np
+
 
 from db.database import get_db
 from db.models import BehaviorLog, Prediction, User
